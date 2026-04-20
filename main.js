@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Get the HTML elements that JavaScript needs to control
+  /* HTML elements */
+
   const cells = document.querySelectorAll(".cell");
   const message = document.querySelector(".message");
   const displayPlayer = document.querySelector(".display_player");
@@ -9,7 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const resetButton = document.querySelector(".reset");
   const gameMode = document.querySelector("#game_mode");
 
-  // These are all 8 possible ways to win Tic Tac Toe
+  /* Game data */
+
   const winningCombinations = [
     [1, 2, 3],
     [4, 5, 6],
@@ -21,7 +23,6 @@ document.addEventListener("DOMContentLoaded", function () {
     [3, 5, 7]
   ];
 
-  // These variables store the current state of the game
   let currentPlayer = "X";
   let gameOver = false;
   let xMoves = [];
@@ -30,7 +31,9 @@ document.addEventListener("DOMContentLoaded", function () {
   let oScore = 0;
   let computerTimer = null;
 
-  // Updates the message at the top of the page to show whose turn it is
+  /* Display functions */
+
+  // Shows whose turn it is
   function showTurnMessage() {
     displayPlayer.textContent = currentPlayer;
     message.textContent = "It's your turn, ";
@@ -38,7 +41,15 @@ document.addEventListener("DOMContentLoaded", function () {
     message.append(".");
   }
 
-  // Returns the move array for the player whose turn it currently is
+  // Updates the score numbers on the page
+  function updateScore() {
+    xScoreDisplay.textContent = xScore;
+    oScoreDisplay.textContent = oScore;
+  }
+
+  /* Game checking functions */
+
+  // Returns the move array for the current player
   function playerMoves() {
     if (currentPlayer === "X") {
       return xMoves;
@@ -47,13 +58,24 @@ document.addEventListener("DOMContentLoaded", function () {
     return oMoves;
   }
 
-  // Checks if the given move array contains any full winning combination
+  // Checks if the given moves have any winning combination
   function playerWon(moves) {
-    return winningCombinations.some(function (combination) {
-      return combination.every(function (square) {
-        return moves.includes(square);
-      });
-    });
+    for (let i = 0; i < winningCombinations.length; i++) {
+      const combination = winningCombinations[i];
+      const firstSquare = combination[0];
+      const secondSquare = combination[1];
+      const thirdSquare = combination[2];
+
+      if (
+        moves.includes(firstSquare) &&
+        moves.includes(secondSquare) &&
+        moves.includes(thirdSquare)
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   // Checks if all 9 squares have been used
@@ -61,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return xMoves.length + oMoves.length === 9;
   }
 
-  // Changes the turn from X to O, or from O back to X
+  // Switches from X to O, or from O to X
   function switchPlayer() {
     if (currentPlayer === "X") {
       currentPlayer = "O";
@@ -70,59 +92,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Shows the current score values on the page
-  function updateScore() {
-    xScoreDisplay.textContent = xScore;
-    oScoreDisplay.textContent = oScore;
+  /* Main game functions */
+
+  // Adds 1 point to the player who won
+  function addPointToWinner() {
+    if (currentPlayer === "X") {
+      xScore = xScore + 1;
+    } else {
+      oScore = oScore + 1;
+    }
+
+    updateScore();
   }
 
-  // Runs after every move to check for a win, tie, or next turn
-  function finishTurn() {
-    if (playerWon(playerMoves())) {
-      message.textContent = "Player " + currentPlayer + " wins!";
-      gameOver = true;
-
-      // Add 1 point to the player who just won
-      if (currentPlayer === "X") {
-        xScore = xScore + 1;
-      } else {
-        oScore = oScore + 1;
-      }
-
-      updateScore();
-      return;
-    }
-
-    // If there is no winner and no empty spaces, the game is a tie
-    if (boardIsFull()) {
-      message.textContent = "It's a tie!";
-      gameOver = true;
-      return;
-    }
-
-    switchPlayer();
-    showTurnMessage();
-
-    // In computer mode, the computer plays as O after the human plays X
-    if (gameMode.value === "computer" && currentPlayer === "O") {
-      computerTimer = setTimeout(makeComputerMove, 400);
-    }
-  }
-
-  // Places X or O in a clicked square and stores the move
+  // Places X or O in a clicked square and saves the move
+  // Runs when a player clicks a square, or when the computer makes a move
   function makeMove(cell) {
     const squareNumber = Number(cell.dataset.square);
     const cellText = cell.querySelector(".xo");
 
-    // Stop the move if the game ended or the square is already filled
     if (gameOver || cellText.textContent !== "") {
       return;
     }
 
-    // Display the current player's mark in the clicked square
+    // Place the current player's mark in the square and save the move
     cellText.textContent = currentPlayer;
 
-    // Save the square number into the correct player's move array
     if (currentPlayer === "X") {
       xMoves.push(squareNumber);
     } else {
@@ -132,29 +127,33 @@ document.addEventListener("DOMContentLoaded", function () {
     finishTurn();
   }
 
-
-
-
-  // Lets the computer choose and play the best move using Minimax
-  function makeComputerMove() {
-    if (gameMode.value !== "computer" || currentPlayer !== "O" || gameOver) {
+  // Checks what should happen after a move
+  // Runs after every sinhle move
+  function finishTurn() {
+    if (playerWon(playerMoves())) {
+      message.textContent = "Player " + currentPlayer + " wins!";
+      gameOver = true;
+      addPointToWinner();
       return;
     }
 
-    const bestSquare = findBestMove();
-
-    // If no square is available, the computer does nothing
-    if (bestSquare === null) {
+    if (boardIsFull()) {
+      message.textContent = "It's a tie!";
+      gameOver = true;
       return;
     }
 
-    const bestCell = document.querySelector('[data-square="' + bestSquare + '"]');
-    makeMove(bestCell);
+    switchPlayer();
+    showTurnMessage();
+
+    if (gameMode.value === "computer" && currentPlayer === "O") {
+      computerTimer = setTimeout(makeComputerMove, 400);
+    }
   }
 
+  /* Minimax computer functions */
 
-  
-  // Builds a simple board array from the current HTML board
+  // Builds a board array from the current HTML board
   function getBoard() {
     const board = [""];
 
@@ -166,46 +165,50 @@ document.addEventListener("DOMContentLoaded", function () {
     return board;
   }
 
-  // Scores the board for Minimax: O win is good, X win is bad, tie is neutral
-  function evaluateBoard(board) {
-    for (let i = 0; i < winningCombinations.length; i++) {
-      const first = winningCombinations[i][0];
-      const second = winningCombinations[i][1];
-      const third = winningCombinations[i][2];
+  // Returns all empty square numbers from a board array
+  // Represents the possible moves that can be made from a given board state
+  function emptySquares(board) {
+    const squares = [];
 
-      if (
-        board[first] !== "" &&
-        board[first] === board[second] &&
-        board[second] === board[third]
-      ) {
-        if (board[first] === "O") {
-          return 10;
-        }
-
-        if (board[first] === "X") {
-          return -10;
-        }
+    for (let square = 1; square <= 9; square++) {
+      if (board[square] === "") {
+        squares.push(square);
       }
     }
 
+    return squares;
+  }
+
+  // Checks if the board has a winnder for Minimax
+  function evaluateBoard(board) {
+    for (let i = 0; i < winningCombinations.length; i++) {
+      const combination = winningCombinations[i];
+      const firstSquare = combination[0];
+      const secondSquare = combination[1];
+      const thirdSquare = combination[2];
+
+      if (
+        board[firstSquare] !== "" &&
+        board[firstSquare] === board[secondSquare] &&
+        board[secondSquare] === board[thirdSquare]
+      ) {
+        if (board[firstSquare] === "O") {
+          return 10;
+          // If O wins, return a positive score. The computer is O, so it wants to maximize the score.
+        }
+
+        if (board[firstSquare] === "X") {
+          return -10;
+          // If X wins, return a negative score. The computer is O, so it wants to minimize the score.
+        }
+      }
+    }
+    // No winner, return 0 for a tie or an ongoing game
     return 0;
   }
 
-  // Checks if the Minimax board still has at least one empty square
-  function boardHasEmptySquare(board) {
-    for (let square = 1; square <= 9; square++) {
-      if (board[square] === "") {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-
-
-
-  // Minimax tests future moves and returns the best score for that path
+  // Looks ahead at future moves and returns the best score
+  // The depths allows the computer to prefer faster wins.
   function minimax(board, depth, isComputerTurn) {
     const score = evaluateBoard(board);
 
@@ -217,69 +220,81 @@ document.addEventListener("DOMContentLoaded", function () {
       return score + depth;
     }
 
-    if (!boardHasEmptySquare(board)) {
+    const availableSquares = emptySquares(board);
+
+    if (availableSquares.length === 0) {
       return 0;
     }
 
-    // The computer is O, so it wants the highest score MAX
     if (isComputerTurn) {
       let bestScore = -Infinity;
 
-      for (let square = 1; square <= 9; square++) {
-        if (board[square] === "") {
-          board[square] = "O";
-          bestScore = Math.max(bestScore, minimax(board, depth + 1, false));
-          board[square] = "";
-        }
+      // The computer tries all possible moves and chooses the one with the highest score
+      for (let i = 0; i < availableSquares.length; i++) {
+        const square = availableSquares[i];
+        board[square] = "O";
+        bestScore = Math.max(bestScore, minimax(board, depth + 1, false));
+        board[square] = "";
       }
 
       return bestScore;
     }
 
-    // The human is X, so this part assumes X chooses the lowest score for O MIN
     let bestScore = Infinity;
 
-    for (let square = 1; square <= 9; square++) {
-      if (board[square] === "") {
-        board[square] = "X";
-        bestScore = Math.min(bestScore, minimax(board, depth + 1, true));
-        board[square] = "";
-      }
+    // The Computer tries from the human player prespective to try all possible moves 
+    // and chooses the one with the lowest score
+    for (let i = 0; i < availableSquares.length; i++) {
+      const square = availableSquares[i];
+      board[square] = "X";
+      bestScore = Math.min(bestScore, minimax(board, depth + 1, true));
+      board[square] = "";
     }
 
     return bestScore;
   }
 
-
-
-
-  // Tries every empty square and picks the move with the best Minimax score
+  // Finds the best square for the computer to play
   function findBestMove() {
     const board = getBoard();
+    const availableSquares = emptySquares(board);
     let bestScore = -Infinity;
     let bestSquare = null;
 
-    for (let square = 1; square <= 9; square++) {
-      if (board[square] === "") {
-        // Try placing O here temporarily (computer is always O)
-        board[square] = "O";
-        const moveScore = minimax(board, 0, false);
-        // Undo the temporary move before testing the next square
-        board[square] = "";
+    for (let i = 0; i < availableSquares.length; i++) {
+      const square = availableSquares[i];
+      board[square] = "O";
+      const moveScore = minimax(board, 0, false);
+      board[square] = "";
 
-        if (moveScore > bestScore) {
-          bestScore = moveScore;
-          bestSquare = square;
-        }
+      // Choose the square with the highest score, which is the best move for the computer
+      if (moveScore > bestScore) {
+        bestScore = moveScore;
+        bestSquare = square;
       }
     }
 
     return bestSquare;
   }
 
+  function makeComputerMove() {
+    if (gameMode.value !== "computer" || currentPlayer !== "O" || gameOver) {
+      return;
+    }
 
+    const bestSquare = findBestMove();
 
-  // Clears the board and starts a new game, but keeps the scores
+    if (bestSquare === null) {
+      return;
+    }
+
+    const bestCell = document.querySelector('[data-square="' + bestSquare + '"]');
+    makeMove(bestCell);
+  }
+
+  /* Restart functions */
+
+  // Clears the board but keeps the scores
   function startNewGame() {
     clearTimeout(computerTimer);
 
@@ -288,7 +303,6 @@ document.addEventListener("DOMContentLoaded", function () {
     xMoves = [];
     oMoves = [];
 
-    // Remove all X and O marks from the board
     cells.forEach(function (cell) {
       cell.querySelector(".xo").textContent = "";
     });
@@ -296,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
     showTurnMessage();
   }
 
-  // Clears the board and resets both players' scores back to 0
+  // Clears the board and resets both scores
   function resetEverything() {
     xScore = 0;
     oScore = 0;
@@ -304,7 +318,8 @@ document.addEventListener("DOMContentLoaded", function () {
     startNewGame();
   }
 
-  // Add a click event to every board square
+  /* Events */
+
   cells.forEach(function (cell) {
     cell.addEventListener("click", function () {
       if (gameMode.value === "computer" && currentPlayer === "O") {
@@ -315,11 +330,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Connect the buttons and dropdown to their functions
   newGameButton.addEventListener("click", startNewGame);
   resetButton.addEventListener("click", resetEverything);
   gameMode.addEventListener("change", startNewGame);
 
-  // Show the first turn message when the page opens
   showTurnMessage();
 });
