@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tic Tac Toe Game</title>
+
+    <!-- Connects the CSS file for styling -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Connects the JavaScript file after the HTML loads -->
+    <script src="main.js" defer></script>
+  </head>
+  <body>
+
+    <!-- Main title and turn message -->
+    <h1>Tic Tac Toe</h1>
+    <h2 class="message">It's your turn, <span class="display_player">X</span>.</h2>
+
+    <!-- Shows how many games each player has won -->
+    <div class="score_board">
+      <p>Player X wins: <span class="x_score">0</span></p>
+      <p>Player O wins: <span class="o_score">0</span></p>
+    </div>
+
+    <!-- Lets the user pick two-player mode or computer mode -->
+    <label class="mode_label" for="game_mode">Game Mode</label>
+    <select id="game_mode">
+      <option value="two_player">Two Players</option>
+      <option value="computer">Play Computer</option>
+    </select>
+
+    <!-- Tic Tac Toe board with 9 numbered squares -->
+    <div class="game_board">
+      <!-- Top row -->
+      <div class='row'>
+        <div class="cell one" data-square="1"><span class="xo"></span></div>
+        <div class="cell two" data-square="2"><span class="xo"></span></div>
+        <div class="cell three" data-square="3"><span class="xo"></span></div>
+      </div>
+      <!-- Middle row -->
+      <div class='row'>
+        <div class="cell four" data-square="4"><span class="xo"></span></div>
+        <div class="cell five" data-square="5"><span class="xo"></span></div>
+        <div class="cell six" data-square="6"><span class="xo"></span></div>
+      </div>
+      <!-- Bottom row -->
+      <div class='row'>
+        <div class="cell seven" data-square="7"><span class="xo"></span></div>
+        <div class="cell eight" data-square="8"><span class="xo"></span></div>
+        <div class="cell nine" data-square="9"><span class="xo"></span></div>
+      </div>
+    </div>
+
+    <!-- Buttons for starting over -->
+    <button class="new_game">New Game</button>
+    <button class="reset">Reset</button>
+  </body>
+
+
+</html>
